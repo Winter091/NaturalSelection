@@ -13,6 +13,8 @@ CellField::CellField()
 			cells[i].push_back(new Cell());
 		}
 	}
+
+	this->GenerateRandomObjects(15);
 }
 
 void CellField::GenerateRandomObjects(unsigned int freq)
@@ -89,6 +91,38 @@ void CellField::Draw(sf::RenderWindow& window)
 		(*r).Draw(window);
 	}
 
-	// All objects
-	// .......
+	// Walls & food
+	sf::RectangleShape rect;
+	rect.setSize(sf::Vector2f(sda::CELL_SIZE, sda::CELL_SIZE));
+	rect.setOutlineThickness(0.0f);
+
+	for (int i = 0; i < sda::CELLS_IN_ROW; i++)
+	{
+		for (int j = 0; j < sda::CELLS_IN_ROW; j++)
+		{
+			if (this->cells[i][j]->GetObject() == "Wall")
+			{
+				float x = sda::GRID_LEFT + sda::CELL_SIZE * i;
+				float y = sda::GRID_TOP + sda::CELL_SIZE * j;
+
+				rect.setPosition(x, y);
+				rect.setFillColor(sf::Color(sda::COLOR_WALL[0], 
+					sda::COLOR_WALL[1], sda::COLOR_WALL[2]));
+				
+				window.draw(rect);
+			}
+
+			else if (this->cells[i][j]->GetObject() == "Food")
+			{
+				float x = sda::GRID_LEFT + sda::CELL_SIZE * i;
+				float y = sda::GRID_TOP + sda::CELL_SIZE * j;
+
+				rect.setPosition(x, y);
+				rect.setFillColor(sf::Color(sda::COLOR_FOOD[0], 
+					sda::COLOR_FOOD[1], sda::COLOR_FOOD[2]));
+
+				window.draw(rect);
+			}
+		}
+	}
 }

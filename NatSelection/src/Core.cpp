@@ -17,7 +17,7 @@ void Core::Update()
 
 void Core::Draw()
 {
-	window.clear(sf::Color(128, 128, 128));
+	window.clear(sf::Color(sda::COLOR_BG[0], sda::COLOR_BG[1], sda::COLOR_BG[2]));
 
 	cellField.Draw(window);
 
