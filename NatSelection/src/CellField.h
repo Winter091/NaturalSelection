@@ -20,6 +20,7 @@ public:
 	void GenerateRandomRobots();
 	void InheritRobots();
 
+	void Update();
 	void Draw(sf::RenderWindow& window);
 
 };

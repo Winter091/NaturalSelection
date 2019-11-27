@@ -2,15 +2,23 @@
 
 #include <string>
 
+enum class Objects
+{
+	NONE,
+	WALL,
+	FOOD,
+	ROBOT
+};
+
 class Cell
 {
 private:
-	std::string object;
+	Objects object;
 
 public:
 	Cell();
 
-	void SetObject(std::string object);
+	void SetObject(Objects object);
 	void RemoveObject();
-	const std::string& GetObject();
+	Objects GetObject();
 };

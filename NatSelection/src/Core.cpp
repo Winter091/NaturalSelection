@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include "Core.h"
 #include "Const.h"
 
@@ -13,6 +15,7 @@ void Core::PollEvents()
 
 void Core::Update()
 {
+	cellField.Update();
 }
 
 void Core::Draw()
@@ -37,6 +40,7 @@ void Core::MainLoop()
 Core::Core()
 	: window(sf::VideoMode(sda::WINDOW_W, sda::WINDOW_H), "Natural Selection")
 {
+	this->window.setFramerateLimit(sda::FPS_LIMIT);
 	this->MainLoop();
 }
 

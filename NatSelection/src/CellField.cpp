@@ -1,6 +1,9 @@
 #include <string>
+#include <iostream>
+#include <ctime>
 
 #include "CellField.h"
+#include "Cell.h"
 #include "Const.h"
 
 CellField::CellField()
@@ -14,7 +17,9 @@ CellField::CellField()
 		}
 	}
 
-	this->GenerateRandomObjects(15);
+	std::srand(std::time(0));
+	this->GenerateRandomObjects(sda::OBJECTS_FREQ);
+	this->GenerateRandomRobots();
 }
 
 void CellField::GenerateRandomObjects(unsigned int freq)
@@ -23,11 +28,11 @@ void CellField::GenerateRandomObjects(unsigned int freq)
 		for (int j = 0; j < sda::CELLS_IN_ROW; j++)
 			
 			// if it's empty and random is good, place a new object
-			if (this->cells[i][j]->GetObject() == "")
+			if (this->cells[i][j]->GetObject() == Objects::NONE)
 			{
 				if (rand() % 100 < freq)
 				{
-					std::string obj = rand() % 2 ? "Food" : "Wall";
+					Objects obj = rand() % 2 ? Objects::FOOD : Objects::WALL;
 					this->cells[i][j]->SetObject(obj);
 				}
 			}
@@ -40,12 +45,14 @@ void CellField::GenerateRandomRobots()
 		while (true)
 		{
 			// Get random index
-			unsigned int a = rand() % sda::CELLS_IN_ROW;
-			unsigned int b = rand() % sda::CELLS_IN_ROW;
+			unsigned int a = std::rand() % sda::CELLS_IN_ROW;
+			unsigned int b = std::rand() % sda::CELLS_IN_ROW;
 
-			if (this->cells[a][b]->GetObject() == "")
+			if (this->cells[a][b]->GetObject() == Objects::NONE)
 			{
 				this->robots.push_back(new Robot(a, b));
+				this->cells[a][b]->SetObject(Objects::ROBOT);
+				break;
 			}
 		}
 	}
@@ -53,6 +60,14 @@ void CellField::GenerateRandomRobots()
 
 void CellField::InheritRobots()
 {
+}
+
+void CellField::Update()
+{
+	for (Robot* r : this->robots)
+	{
+		r->ExecuteProgram(this->cells);
+	}
 }
 
 void CellField::Draw(sf::RenderWindow& window)
@@ -86,7 +101,7 @@ void CellField::Draw(sf::RenderWindow& window)
 	}
 
 	// Robots
-	for (Robot*& r : this->robots)
+	for (Robot* r : this->robots)
 	{
 		(*r).Draw(window);
 	}
@@ -100,27 +115,33 @@ void CellField::Draw(sf::RenderWindow& window)
 	{
 		for (int j = 0; j < sda::CELLS_IN_ROW; j++)
 		{
-			if (this->cells[i][j]->GetObject() == "Wall")
+			if (this->cells[i][j]->GetObject() == Objects::FOOD)
 			{
+				sf::Color color;
+				color.r = sda::COLOR_FOOD[0];
+				color.g = sda::COLOR_FOOD[1];
+				color.b = sda::COLOR_FOOD[2];
+
 				float x = sda::GRID_LEFT + sda::CELL_SIZE * i;
 				float y = sda::GRID_TOP + sda::CELL_SIZE * j;
 
 				rect.setPosition(x, y);
-				rect.setFillColor(sf::Color(sda::COLOR_WALL[0], 
-					sda::COLOR_WALL[1], sda::COLOR_WALL[2]));
-				
+				rect.setFillColor(color);
 				window.draw(rect);
 			}
 
-			else if (this->cells[i][j]->GetObject() == "Food")
+			else if (this->cells[i][j]->GetObject() == Objects::WALL)
 			{
+				sf::Color color;
+				color.r = sda::COLOR_WALL[0];
+				color.g = sda::COLOR_WALL[1];
+				color.b = sda::COLOR_WALL[2];
+
 				float x = sda::GRID_LEFT + sda::CELL_SIZE * i;
 				float y = sda::GRID_TOP + sda::CELL_SIZE * j;
 
 				rect.setPosition(x, y);
-				rect.setFillColor(sf::Color(sda::COLOR_FOOD[0], 
-					sda::COLOR_FOOD[1], sda::COLOR_FOOD[2]));
-
+				rect.setFillColor(color);
 				window.draw(rect);
 			}
 		}

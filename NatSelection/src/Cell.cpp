@@ -5,17 +5,17 @@ Cell::Cell()
 {
 }
 
-void Cell::SetObject(std::string object)
+void Cell::SetObject(Objects object)
 {
 	this->object = object;
 }
 
 void Cell::RemoveObject()
 {
-	this->object = "";
+	this->object = Objects::NONE;
 }
 
-const std::string& Cell::GetObject()
+Objects Cell::GetObject()
 {
 	return this->object;
 }
