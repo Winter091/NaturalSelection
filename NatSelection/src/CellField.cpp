@@ -6,6 +6,16 @@
 #include "Cell.h"
 #include "Const.h"
 
+unsigned int CellField::GetAvgHealth()
+{
+	unsigned int sum = 0;
+	for (int i = 0; i < this->robots.size(); i++)
+	{
+		sum += robots[i]->GetHealth();
+	}
+	return sum / this->robots.size();
+}
+
 CellField::CellField()
 	: cells(sda::CELLS_IN_ROW)
 {
@@ -20,6 +30,52 @@ CellField::CellField()
 	std::srand(std::time(0));
 	this->GenerateRandomObjects(sda::OBJECTS_FREQ);
 	this->GenerateRandomRobots();
+}
+
+std::string CellField::getParams()
+{
+	std::string params;
+
+	params.append("Generation: ");
+	params.append(std::to_string(this->generation));
+	params.append("\n");
+
+	params.append("Robot count: ");
+	params.append(std::to_string(this->robots.size()));
+	params.append("\n");
+
+	params.append("Gen. AVG Health: ");
+	params.append(std::to_string(this->GetAvgHealth()));
+	params.append("\n");
+
+	return params;
+}
+
+unsigned int CellField::GetGeneration()
+{
+	return this->generation;
+}
+
+void CellField::SetDefaultsForRobots()
+{
+	for (int i = 0; i < this->robots.size(); i++)
+	{
+		robots[i]->SetDefaults();
+	}
+}
+
+void CellField::DeleteObjects()
+{
+	for (int i = 0; i < sda::CELLS_IN_ROW; i++)
+	{
+		for (int j = 0; j < sda::CELLS_IN_ROW; j++)
+		{
+			if (this->cells[i][j]->GetObject() == Objects::FOOD || this->cells[i][j]->GetObject() == Objects::WALL)
+			{
+				this->cells[i][j]->SetObject(Objects::NONE);
+			}
+		}
+	}
 }
 
 void CellField::GenerateRandomObjects(unsigned int freq)
@@ -38,9 +94,9 @@ void CellField::GenerateRandomObjects(unsigned int freq)
 			}
 }
 
-void CellField::GenerateRandomRobots()
+void CellField::GenerateRandomRobots(unsigned int count)
 {
-	for (int i = 0; i < sda::ROBOT_COUNT; i++)
+	for (int i = 0; i < count; i++)
 	{
 		while (true)
 		{
@@ -50,7 +106,8 @@ void CellField::GenerateRandomRobots()
 
 			if (this->cells[a][b]->GetObject() == Objects::NONE)
 			{
-				this->robots.push_back(new Robot(a, b));
+				this->robots.push_back(std::make_unique<Robot>(a, b));
+				//this->robots.push_back(new Robot(a, b));
 				this->cells[a][b]->SetObject(Objects::ROBOT);
 				break;
 			}
@@ -59,15 +116,73 @@ void CellField::GenerateRandomRobots()
 }
 
 void CellField::InheritRobots()
-{
+{	
+	for (int i = 0; i < sda::ROBOT_COUNT - sda::ROBOT_MIN_COUNT; i++)
+	{
+		unsigned int robot1 = std::rand() % sda::ROBOT_MIN_COUNT;
+		unsigned int robot2 = std::rand() % sda::ROBOT_MIN_COUNT;
+
+		std::vector<unsigned int> code1 = robots[robot1]->GetCode();
+		std::vector<unsigned int> code2 = robots[robot2]->GetCode();
+
+		std::vector<unsigned int> newCode;
+		newCode.insert(newCode.end(), code1.begin()     , code1.begin() + 16);
+		newCode.insert(newCode.end(), code2.begin() + 16, code2.begin() + 32);
+		newCode.insert(newCode.end(), code1.begin() + 32, code1.begin() + 48);
+		newCode.insert(newCode.end(), code2.begin() + 48, code2.begin() + 64);
+
+		while (true)
+		{
+			unsigned int a = std::rand() % sda::CELLS_IN_ROW;
+			unsigned int b = std::rand() % sda::CELLS_IN_ROW;
+
+			if (this->cells[a][b]->GetObject() == Objects::NONE)
+			{
+				this->robots.push_back(std::make_unique<Robot>(a, b, newCode));
+				break;
+			}
+		}
+	}
 }
 
-void CellField::Update()
+bool CellField::Update()
 {
-	for (Robot* r : this->robots)
+	for (int i = 0; i < this->robots.size(); i++)
 	{
-		r->ExecuteProgram(this->cells);
+		if (robots[i]->ExecuteProgram(this->cells, this->robots))
+		{
+			int x = robots[i]->getX();
+			int y = robots[i]->getY();
+			this->cells[x][y]->RemoveObject();
+			this->robots.erase(std::remove(robots.begin(), robots.end(), robots[i]), robots.end());
+		}
 	}
+
+	if (this->robots.size() <= sda::ROBOT_MIN_COUNT)
+	{
+		this->generation++;
+
+		this->DeleteObjects();
+		this->GenerateRandomObjects(sda::OBJECTS_FREQ);
+
+		for (int i = 0; i < this->robots.size(); i++)
+		{
+			robots[i]->SetRandomPos(this->cells);
+		}
+		
+		if (this->robots.size() < sda::ROBOT_MIN_COUNT)
+		{
+			this->GenerateRandomRobots(sda::ROBOT_MIN_COUNT - this->robots.size());
+		}
+
+		this->InheritRobots();
+		//this->GenerateRandomRobots(56);
+		this->SetDefaultsForRobots();
+
+		return true;
+	}
+
+	return false;
 }
 
 void CellField::Draw(sf::RenderWindow& window)
@@ -75,7 +190,7 @@ void CellField::Draw(sf::RenderWindow& window)
 	// Vertical grid lines
 	for (int i = 0; i <= sda::CELLS_IN_ROW; i++)
 	{
-		float x = sda::GRID_LEFT + sda::CELL_SIZE * i;
+		float x = sda::GRID_LEFT + sda::CELL_W * i;
 
 		sf::Vertex line[] =
 		{
@@ -89,7 +204,7 @@ void CellField::Draw(sf::RenderWindow& window)
 	// Horisontal grid lines
 	for (int i = 0; i <= sda::CELLS_IN_ROW; i++)
 	{
-		float y = sda::GRID_TOP + sda::CELL_SIZE * i;
+		float y = sda::GRID_TOP + sda::CELL_H * i;
 
 		sf::Vertex line[] =
 		{
@@ -101,14 +216,14 @@ void CellField::Draw(sf::RenderWindow& window)
 	}
 
 	// Robots
-	for (Robot* r : this->robots)
+	for (int i = 0; i < this->robots.size(); i++)
 	{
-		(*r).Draw(window);
+		robots[i]->Draw(window);
 	}
 
 	// Walls & food
 	sf::RectangleShape rect;
-	rect.setSize(sf::Vector2f(sda::CELL_SIZE, sda::CELL_SIZE));
+	rect.setSize(sf::Vector2f(sda::CELL_W, sda::CELL_H));
 	rect.setOutlineThickness(0.0f);
 
 	for (int i = 0; i < sda::CELLS_IN_ROW; i++)
@@ -122,8 +237,8 @@ void CellField::Draw(sf::RenderWindow& window)
 				color.g = sda::COLOR_FOOD[1];
 				color.b = sda::COLOR_FOOD[2];
 
-				float x = sda::GRID_LEFT + sda::CELL_SIZE * i;
-				float y = sda::GRID_TOP + sda::CELL_SIZE * j;
+				float x = sda::GRID_LEFT + sda::CELL_W * i;
+				float y = sda::GRID_TOP + sda::CELL_H * j;
 
 				rect.setPosition(x, y);
 				rect.setFillColor(color);
@@ -137,8 +252,8 @@ void CellField::Draw(sf::RenderWindow& window)
 				color.g = sda::COLOR_WALL[1];
 				color.b = sda::COLOR_WALL[2];
 
-				float x = sda::GRID_LEFT + sda::CELL_SIZE * i;
-				float y = sda::GRID_TOP + sda::CELL_SIZE * j;
+				float x = sda::GRID_LEFT + sda::CELL_W * i;
+				float y = sda::GRID_TOP + sda::CELL_H * j;
 
 				rect.setPosition(x, y);
 				rect.setFillColor(color);

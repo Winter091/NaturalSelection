@@ -9,8 +9,10 @@ class Core
 private:
 	sf::RenderWindow window;
 	CellField cellField;
+	sf::Font font;
+	sf::Text text;
 
-
+	void DrawInfo();
 	void PollEvents();
 	void Update();
 	void Draw();

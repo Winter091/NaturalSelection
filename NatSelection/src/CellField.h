@@ -2,25 +2,36 @@
 
 #include <vector>
 
-#include <SFML/Graphics.hpp>
-
-#include "Cell.h"
 #include "Robot.h"
+#include "Cell.h"
+#include "Const.h"
+
+#include <SFML/Graphics.hpp>
 
 class CellField
 {
 private:
+	std::vector<std::unique_ptr<Robot>> robots;
 	std::vector<std::vector<Cell*> > cells;
-	std::vector<Robot*> robots;
+
+	unsigned int generation = 1;
+
+	unsigned int GetAvgHealth();
 
 public:
+	
 	CellField();
 
+	std::string getParams();
+
+	unsigned int GetGeneration();
+	void SetDefaultsForRobots();
+	void DeleteObjects();
 	void GenerateRandomObjects(unsigned int freq);
-	void GenerateRandomRobots();
+	void GenerateRandomRobots(unsigned int count = sda::ROBOT_COUNT);
 	void InheritRobots();
 
-	void Update();
+	bool Update();
 	void Draw(sf::RenderWindow& window);
 
 };
