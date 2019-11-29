@@ -3,11 +3,6 @@
 #include "Core.h"
 #include "Const.h"
 
-void Core::DrawInfo()
-{
-	this->window.draw(this->text);
-}
-
 void Core::PollEvents()
 {
 	sf::Event event;
@@ -20,10 +15,13 @@ void Core::PollEvents()
 
 void Core::Update()
 {
+	// If true, the new generation is created in this frame
 	if (cellField.Update())
 	{
 		std::cout << cellField.GetGeneration() << std::endl;
 	}
+
+	// Some useful info
 	this->text.setString(cellField.getParams());
 }
 
@@ -32,7 +30,7 @@ void Core::Draw()
 	window.clear(sf::Color(sda::COLOR_BG[0], sda::COLOR_BG[1], sda::COLOR_BG[2]));
 
 	cellField.Draw(window);
-	this->DrawInfo();
+	this->window.draw(this->text);
 
 	window.display();
 }
@@ -44,10 +42,7 @@ void Core::MainLoop()
 		PollEvents();
 		Update();
 		if (cellField.GetGeneration() > sda::PRE_GENERATE)
-		{
 			Draw();
-
-		}
 	}
 }
 
@@ -58,7 +53,7 @@ Core::Core()
 	this->font.loadFromFile("CarLock.otf");
 	this->text.setString(cellField.getParams());
 	this->text.setFont(this->font);
-	this->text.setCharacterSize(20);
+	this->text.setCharacterSize(18);
 	this->text.setFillColor(sf::Color::Black);
 	this->text.setPosition(10, 10);
 	

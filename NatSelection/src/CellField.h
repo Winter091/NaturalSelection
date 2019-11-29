@@ -12,22 +12,26 @@ class CellField
 {
 private:
 	std::vector<std::unique_ptr<Robot>> robots;
-	std::vector<std::vector<Cell*> > cells;
+	std::vector<std::vector<Cell*>> cells;
 
 	unsigned int generation = 1;
+	unsigned int bestTime = 0;
+	unsigned int currTime = 0;
+	unsigned int bestGeneration = 0;
 
 	unsigned int GetAvgHealth();
 
 public:
-	
 	CellField();
 
 	std::string getParams();
-
 	unsigned int GetGeneration();
+
 	void SetDefaultsForRobots();
+
 	void DeleteObjects();
 	void GenerateRandomObjects(unsigned int freq);
+
 	void GenerateRandomRobots(unsigned int count = sda::ROBOT_COUNT);
 	void InheritRobots();
 

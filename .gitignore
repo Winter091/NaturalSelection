@@ -4,3 +4,4 @@ out/
 *.filters
 *.user
 *.vcxproj
+src/Timer.h

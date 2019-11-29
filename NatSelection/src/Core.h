@@ -9,10 +9,11 @@ class Core
 private:
 	sf::RenderWindow window;
 	CellField cellField;
+
+	// to draw text above grid
 	sf::Font font;
 	sf::Text text;
 
-	void DrawInfo();
 	void PollEvents();
 	void Update();
 	void Draw();

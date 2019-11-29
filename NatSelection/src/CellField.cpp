@@ -27,6 +27,8 @@ CellField::CellField()
 		}
 	}
 
+	Robot::InitDrawingStuff();
+
 	std::srand(std::time(0));
 	this->GenerateRandomObjects(sda::OBJECTS_FREQ);
 	this->GenerateRandomRobots();
@@ -36,16 +38,26 @@ std::string CellField::getParams()
 {
 	std::string params;
 
-	params.append("Generation: ");
-	params.append(std::to_string(this->generation));
-	params.append("\n");
-
 	params.append("Robot count: ");
 	params.append(std::to_string(this->robots.size()));
 	params.append("\n");
 
-	params.append("Gen. AVG Health: ");
+	params.append("AVG Health: ");
 	params.append(std::to_string(this->GetAvgHealth()));
+	params.append("\n");
+
+	params.append("Generation: ");
+	params.append(std::to_string(this->generation));
+
+	params.append("     Curr generation time: ");
+	params.append(std::to_string(this->currTime));
+	params.append("\n");
+
+	params.append("Best generation: ");
+	params.append(std::to_string(this->bestGeneration));
+
+	params.append("     Best generation time: ");
+	params.append(std::to_string(this->bestTime));
 	params.append("\n");
 
 	return params;
@@ -119,18 +131,36 @@ void CellField::InheritRobots()
 {	
 	for (int i = 0; i < sda::ROBOT_COUNT - sda::ROBOT_MIN_COUNT; i++)
 	{
+		// Code from random 4 robots
 		unsigned int robot1 = std::rand() % sda::ROBOT_MIN_COUNT;
 		unsigned int robot2 = std::rand() % sda::ROBOT_MIN_COUNT;
+		unsigned int robot3 = std::rand() % sda::ROBOT_MIN_COUNT;
+		unsigned int robot4 = std::rand() % sda::ROBOT_MIN_COUNT;
 
 		std::vector<unsigned int> code1 = robots[robot1]->GetCode();
 		std::vector<unsigned int> code2 = robots[robot2]->GetCode();
+		std::vector<unsigned int> code3 = robots[robot3]->GetCode();
+		std::vector<unsigned int> code4 = robots[robot4]->GetCode();
 
 		std::vector<unsigned int> newCode;
 		newCode.insert(newCode.end(), code1.begin()     , code1.begin() + 16);
 		newCode.insert(newCode.end(), code2.begin() + 16, code2.begin() + 32);
-		newCode.insert(newCode.end(), code1.begin() + 32, code1.begin() + 48);
-		newCode.insert(newCode.end(), code2.begin() + 48, code2.begin() + 64);
+		newCode.insert(newCode.end(), code3.begin() + 32, code3.begin() + 48);
+		newCode.insert(newCode.end(), code4.begin() + 48, code4.begin() + 64);
 
+		// Mutate this robot if luck is good
+		if (std::rand() % 100 < sda::ROBOT_MUTATION_FREQ)
+		{
+			// Remove 8 random commands
+			for (int i = 0; i < 8; i++)
+				newCode.erase(newCode.begin() + std::rand() % newCode.size());
+
+			// Push random commands
+			for (int i = 0; i < 8; i++)
+				newCode.push_back(std::rand() % 64);
+		}
+
+		// Put this robot in empty cell
 		while (true)
 		{
 			unsigned int a = std::rand() % sda::CELLS_IN_ROW;
@@ -146,13 +176,17 @@ void CellField::InheritRobots()
 }
 
 bool CellField::Update()
-{
+{	
+	currTime++;
+	
 	for (int i = 0; i < this->robots.size(); i++)
 	{
+		// If robot has died
 		if (robots[i]->ExecuteProgram(this->cells, this->robots))
 		{
-			int x = robots[i]->getX();
-			int y = robots[i]->getY();
+			// Remove this robot
+			int x = robots[i]->GetX();
+			int y = robots[i]->GetY();
 			this->cells[x][y]->RemoveObject();
 			this->robots.erase(std::remove(robots.begin(), robots.end(), robots[i]), robots.end());
 		}
@@ -160,23 +194,34 @@ bool CellField::Update()
 
 	if (this->robots.size() <= sda::ROBOT_MIN_COUNT)
 	{
-		this->generation++;
 
+		if (this->currTime > this->bestTime)
+		{
+			this->bestTime = this->currTime;
+			this->bestGeneration = this->generation;
+		}
+
+		this->generation++;
+		this->currTime = 0;
+
+		// ReCreate all objects
 		this->DeleteObjects();
 		this->GenerateRandomObjects(sda::OBJECTS_FREQ);
 
+		// Shuffle all remaining robots
 		for (int i = 0; i < this->robots.size(); i++)
 		{
 			robots[i]->SetRandomPos(this->cells);
 		}
 		
+		// If there are not enough robots (less than sda::ROBOT_MIN_COUNT),
+		// add random robots
 		if (this->robots.size() < sda::ROBOT_MIN_COUNT)
 		{
 			this->GenerateRandomRobots(sda::ROBOT_MIN_COUNT - this->robots.size());
 		}
 
 		this->InheritRobots();
-		//this->GenerateRandomRobots(56);
 		this->SetDefaultsForRobots();
 
 		return true;

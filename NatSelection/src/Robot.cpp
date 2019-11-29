@@ -1,6 +1,10 @@
 #include "Robot.h"
 #include "Const.h"
 
+// Static objects declaration
+sf::RectangleShape Robot::drawRect;
+sf::Font Robot::font;
+sf::Text Robot::text;
 
 // direction has to be [0-7]
 bool Robot::CheckBorders(unsigned int direction)
@@ -32,18 +36,15 @@ void Robot::DoCurrentAction(const std::vector<std::vector<Cell*>>& cells)
 		if (this->currAction == Actions::EATING_FOOD)
 		{
 			this->lifeTimer += sda::FOOD_HP;
-			this->currAction = Actions::NONE;
-			cells[this->x][this->y]->RemoveObject();
-			this->x += this->pendingMoveX;
-			this->y += this->pendingMoveY;
-			cells[this->x][this->y]->SetObject(Objects::ROBOT);
+			this->MoveTo(this->x + this->pendingMoveX, this->y + this->pendingMoveY, cells);
 		}
 
 		else if (this->currAction == Actions::TURNING_WALL_TO_FOOD)
 		{
-			this->currAction = Actions::NONE;
 			cells[this->x + this->pendingMoveX][this->y + this->pendingMoveY]->SetObject(Objects::FOOD);
 		}
+
+		this->currAction = Actions::NONE;
 	}
 }
 
@@ -56,9 +57,7 @@ void Robot::Move(unsigned int direction, const std::vector<std::vector<Cell*>>& 
 		{
 			if (cells[this->x - 1][this->y]->GetObject() == Objects::NONE)
 			{
-				cells[this->x][this->y]->RemoveObject();
-				this->x--;
-				cells[this->x][this->y]->SetObject(Objects::ROBOT);
+				this->MoveTo(this->x - 1, this->y, cells);
 			}
 		}
 	}
@@ -70,9 +69,7 @@ void Robot::Move(unsigned int direction, const std::vector<std::vector<Cell*>>& 
 		{
 			if (cells[this->x][this->y - 1]->GetObject() == Objects::NONE)
 			{
-				cells[this->x][this->y]->RemoveObject();
-				this->y--;
-				cells[this->x][this->y]->SetObject(Objects::ROBOT);
+				this->MoveTo(this->x, this->y - 1, cells);
 			}
 		}
 	}
@@ -84,9 +81,7 @@ void Robot::Move(unsigned int direction, const std::vector<std::vector<Cell*>>& 
 		{
 			if (cells[this->x + 1][this->y]->GetObject() == Objects::NONE)
 			{
-				cells[this->x][this->y]->RemoveObject();
-				this->x++;
-				cells[this->x][this->y]->SetObject(Objects::ROBOT);
+				this->MoveTo(this->x + 1, this->y, cells);
 			}
 		}
 	}
@@ -98,14 +93,13 @@ void Robot::Move(unsigned int direction, const std::vector<std::vector<Cell*>>& 
 		{
 			if (cells[this->x][this->y + 1]->GetObject() == Objects::NONE)
 			{
-				cells[this->x][this->y]->RemoveObject();
-				this->y++;
-				cells[this->x][this->y]->SetObject(Objects::ROBOT);
+				this->MoveTo(this->x, this->y + 1, cells);
 			}
 		}
 	}
 }
 
+// this->code[63] is time to wait before eating food
 void Robot::EatFood(unsigned int direction, const std::vector<std::vector<Cell*>>& cells)
 {
 	// Left
@@ -169,6 +163,7 @@ void Robot::EatFood(unsigned int direction, const std::vector<std::vector<Cell*>
 	}
 }
 
+// this->code[62] is time to wait before changing wall to food
 void Robot::TurnWallIntoFood(unsigned int direction, const std::vector<std::vector<Cell*>>& cells)
 {
 	// Left
@@ -234,7 +229,7 @@ void Robot::TurnWallIntoFood(unsigned int direction, const std::vector<std::vect
 
 void Robot::AddLife(unsigned int amount)
 {
-	this->lifeTimer += amount / 1.5;
+	this->lifeTimer += amount / 2;
 }
 
 Robot::Robot(unsigned int x, unsigned int y)
@@ -244,21 +239,11 @@ Robot::Robot(unsigned int x, unsigned int y)
 	
 	this->SetDefaults();
 
-	this->font.loadFromFile("CarLock.otf");
-
-	this->text.setFont(this->font);
-	this->text.setCharacterSize(11);
-	this->text.setFillColor(sf::Color::Black);
-
 	// 64 commands, each command is in [0-63] range
 	for (int i = 0; i < 64; i++)
 	{
-		this->code.push_back(rand() % 64);
+		this->code.push_back(std::rand() % 64);
 	}
-
-	this->drawRect.setSize(sf::Vector2f(sda::CELL_W, sda::CELL_H));
-	this->drawRect.setOutlineThickness(0.0f);
-	this->drawRect.setFillColor(sf::Color(sda::COLOR_ROBOT[0], sda::COLOR_ROBOT[1], sda::COLOR_ROBOT[2]));
 }
 
 Robot::Robot(unsigned int x, unsigned int y, std::vector<unsigned int> code)
@@ -268,16 +253,19 @@ Robot::Robot(unsigned int x, unsigned int y, std::vector<unsigned int> code)
 	this->code = code;
 
 	this->SetDefaults();
+}
 
-	this->font.loadFromFile("CarLock.otf");
+void Robot::InitDrawingStuff()
+{
+	Robot::font.loadFromFile("CarLock.otf");
 
-	this->text.setFont(this->font);
-	this->text.setCharacterSize(11);
-	this->text.setFillColor(sf::Color::Black);
+	Robot::drawRect.setSize(sf::Vector2f(sda::CELL_W, sda::CELL_H));
+	Robot::drawRect.setOutlineThickness(0.0f);
+	Robot::drawRect.setFillColor(sf::Color(sda::COLOR_ROBOT[0], sda::COLOR_ROBOT[1], sda::COLOR_ROBOT[2]));
 
-	this->drawRect.setSize(sf::Vector2f(sda::CELL_W, sda::CELL_H));
-	this->drawRect.setOutlineThickness(0.0f);
-	this->drawRect.setFillColor(sf::Color(sda::COLOR_ROBOT[0], sda::COLOR_ROBOT[1], sda::COLOR_ROBOT[2]));
+	Robot::text.setFont(Robot::font);
+	Robot::text.setCharacterSize(11);
+	Robot::text.setFillColor(sf::Color::Black);
 }
 
 int Robot::GetHealth()
@@ -295,12 +283,12 @@ void Robot::SetDefaults()
 	this->pendingMoveY = 0;
 }
 
-int Robot::getX()
+unsigned int Robot::GetX()
 {
 	return x;
 }
 
-int Robot::getY()
+unsigned int Robot::GetY()
 {
 	return y;
 }
@@ -314,15 +302,21 @@ void Robot::SetRandomPos(std::vector<std::vector<Cell*>>& cells)
 
 		if (cells[a][b]->GetObject() == Objects::NONE)
 		{
-			cells[this->x][this->y]->SetObject(Objects::NONE);
-			this->x = a;
-			this->y = b;
-			cells[a][b]->SetObject(Objects::ROBOT);
+			this->MoveTo(a, b, cells);
 			break;
 		}
 	}
 }
 
+void Robot::MoveTo(unsigned int x, unsigned int y, const std::vector<std::vector<Cell*>>& cells)
+{
+	cells[this->x][this->y]->RemoveObject();
+	this->x = x;
+	this->y = y;
+	cells[this->x][this->y]->SetObject(Objects::ROBOT);
+}
+
+// Returns true only if this robot has died right now
 bool Robot::ExecuteProgram(std::vector<std::vector<Cell*>>& cells, std::vector<std::unique_ptr<Robot>>& robots)
 {
 	if (--this->lifeTimer <= 0)
@@ -338,7 +332,6 @@ bool Robot::ExecuteProgram(std::vector<std::vector<Cell*>>& cells, std::vector<s
 	
 	unsigned int cmd = this->code[this->codePtr];
 
-	// Move
 	if (cmd >= 0 && cmd <= 7)
 	{
 		this->Move(cmd, cells);
