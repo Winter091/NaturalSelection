@@ -19,7 +19,14 @@ private:
 	unsigned int currTime = 0;
 	unsigned int bestGeneration = 0;
 
+	float avgWalkCommands = 0.0f;
+	float avgEatFoodCommands = 0.0f;
+	float avgChangeWallCommands = 0.0f;
+	float avgFreeFoodCommands = 0.0f;
+	float avgDoNothingCommands = 0.0f;
+
 	unsigned int GetAvgHealth();
+	void setCommandAmounts();
 
 public:
 	CellField();

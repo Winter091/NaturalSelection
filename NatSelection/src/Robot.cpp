@@ -229,7 +229,10 @@ void Robot::TurnWallIntoFood(unsigned int direction, const std::vector<std::vect
 
 void Robot::AddLife(unsigned int amount)
 {
-	this->lifeTimer += amount / 2;
+	if (sda::FREE_HP == -1)
+		this->lifeTimer += amount * sda::FREE_HP_MULTIPLIER;
+	else
+		this->lifeTimer += sda::FREE_HP;
 }
 
 Robot::Robot(unsigned int x, unsigned int y)
@@ -264,7 +267,7 @@ void Robot::InitDrawingStuff()
 	Robot::drawRect.setFillColor(sf::Color(sda::COLOR_ROBOT[0], sda::COLOR_ROBOT[1], sda::COLOR_ROBOT[2]));
 
 	Robot::text.setFont(Robot::font);
-	Robot::text.setCharacterSize(11);
+	Robot::text.setCharacterSize(sda::ROBOT_FONT_SIZE);
 	Robot::text.setFillColor(sf::Color::Black);
 }
 
@@ -371,11 +374,18 @@ std::vector<unsigned int>& Robot::GetCode()
 
 void Robot::Draw(sf::RenderWindow& window)
 {
+	// To avoid errors that happen because
+	// Draw() is executed by another thread
+	if (this == nullptr)
+		return;
+	
+	// Rectangle
 	float x = sda::GRID_LEFT + sda::CELL_W * this->x;
 	float y = sda::GRID_TOP + sda::CELL_H * this->y;
 	this->drawRect.setPosition(x, y);
 	window.draw(this->drawRect);
 	
+	// Text on top representing amount of HP
 	this->text.setString(std::to_string(this->lifeTimer));
 	this->text.setPosition(x + 1, y + 1);
 	window.draw(this->text);

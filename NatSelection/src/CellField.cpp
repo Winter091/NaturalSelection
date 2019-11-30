@@ -16,6 +16,35 @@ unsigned int CellField::GetAvgHealth()
 	return sum / this->robots.size();
 }
 
+void CellField::setCommandAmounts()
+{
+	for (int i = 0; i < this->robots.size(); i++)
+	{
+		const std::vector<unsigned int>& code = this->robots[i]->GetCode();
+		for (int j = 0; j < code.size(); j++)
+		{
+			unsigned int cmd = code[j];
+
+			if (cmd >= 0 && cmd <= 7)
+				avgWalkCommands++;
+			else if (cmd >= 8 && cmd <= 15)
+				avgEatFoodCommands++;
+			else if (cmd >= 16 && cmd <= 23)
+				avgChangeWallCommands++;
+			else if (cmd >= 24 && cmd <= 31)
+				avgFreeFoodCommands++;
+			else
+				avgDoNothingCommands++;
+		}
+	}
+
+	avgWalkCommands /= (this->robots.size() * 64);
+	avgEatFoodCommands /= (this->robots.size() * 64);
+	avgChangeWallCommands /= (this->robots.size() * 64);
+	avgFreeFoodCommands /= (this->robots.size() * 64);
+	avgDoNothingCommands /= (this->robots.size() * 64);
+}
+
 CellField::CellField()
 	: cells(sda::CELLS_IN_ROW)
 {
@@ -38,27 +67,45 @@ std::string CellField::getParams()
 {
 	std::string params;
 
-	params.append("Robot count: ");
+	params.append("Walk:                        ");
+	params.append(std::to_string(this->avgWalkCommands).substr(0, 5));
+
+	params.append("                        Robot count: ");
 	params.append(std::to_string(this->robots.size()));
 	params.append("\n");
 
-	params.append("AVG Health: ");
+	params.append("Eat Food:            ");
+	params.append(std::to_string(this->avgEatFoodCommands).substr(0, 5));
+
+	params.append("                        AVG Health: ");
 	params.append(std::to_string(this->GetAvgHealth()));
 	params.append("\n");
 
-	params.append("Generation: ");
-	params.append(std::to_string(this->generation));
+	params.append("Chagne Wall: ");
+	params.append(std::to_string(this->avgChangeWallCommands).substr(0, 5));
 
-	params.append("     Curr generation time: ");
+	params.append("                        Generation: ");
+	params.append(std::to_string(this->generation));
+	params.append("\n");
+
+	params.append("Free Food:         ");
+	params.append(std::to_string(this->avgFreeFoodCommands).substr(0, 5));
+
+	params.append("                        Curr generation time: ");
 	params.append(std::to_string(this->currTime));
+	params.append("\n");
+
+	params.append("Do Nothing:     ");
+	params.append(std::to_string(this->avgDoNothingCommands).substr(0, 5));
+
+	params.append("                       Best generation time: ");
+	params.append(std::to_string(this->bestTime));
 	params.append("\n");
 
 	params.append("Best generation: ");
 	params.append(std::to_string(this->bestGeneration));
-
-	params.append("     Best generation time: ");
-	params.append(std::to_string(this->bestTime));
-	params.append("\n");
+	params.append("                ");
+	
 
 	return params;
 }
@@ -192,6 +239,7 @@ bool CellField::Update()
 		}
 	}
 
+	// Create new generation
 	if (this->robots.size() <= sda::ROBOT_MIN_COUNT)
 	{
 
@@ -204,7 +252,7 @@ bool CellField::Update()
 		this->generation++;
 		this->currTime = 0;
 
-		// ReCreate all objects
+		// Recreate all objects
 		this->DeleteObjects();
 		this->GenerateRandomObjects(sda::OBJECTS_FREQ);
 
@@ -223,6 +271,8 @@ bool CellField::Update()
 
 		this->InheritRobots();
 		this->SetDefaultsForRobots();
+
+		this->setCommandAmounts();
 
 		return true;
 	}
