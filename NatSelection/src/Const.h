@@ -25,6 +25,7 @@ namespace sda
 	const unsigned int CELL_H = (GRID_BOTTOM - GRID_TOP) / CELLS_IN_ROW;
 
 	const unsigned int ROBOT_FONT_SIZE = 5;
+	const bool		   ROBOT_DRAW_TEXT = false;
 
 	const unsigned int ROBOT_COUNT = 64;
 
@@ -32,21 +33,21 @@ namespace sda
 	const unsigned int ROBOT_MIN_COUNT = 8;
 
 	// Each frame is one tick
-	const unsigned int ROBOT_LIFE_TIME = 500;
+	const unsigned int ROBOT_LIFE_TIME = 100;
 
 	// 0% - 100%
-	const unsigned int ROBOT_MUTATION_FREQ = 5;
+	const unsigned int ROBOT_MUTATION_FREQ = 2;
 
 	// 0% - 100%
 	const unsigned int OBJECTS_FREQ = 25;
 
 	// How much hp the food gives
-	const unsigned int FOOD_HP = 100;
+	const unsigned int FOOD_HP = 0;
 
 	// How much hp will the robot get free if command is [24-31]
 	// -1 to set it so it will depend on the actual command
-	const int FREE_HP = -1;
+	const int FREE_HP = 1;
 
 	// Works with (FREE_HP = -1)
-	const float FREE_HP_MULTIPLIER = 0.35f;
+	const float FREE_HP_MULTIPLIER = 0.25f;
 }

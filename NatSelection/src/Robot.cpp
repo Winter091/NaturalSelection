@@ -36,7 +36,7 @@ void Robot::DoCurrentAction(const std::vector<std::vector<Cell*>>& cells)
 		if (this->currAction == Actions::EATING_FOOD)
 		{
 			this->lifeTimer += sda::FOOD_HP;
-			this->MoveTo(this->x + this->pendingMoveX, this->y + this->pendingMoveY, cells);
+			this->SetPosition(this->x + this->pendingMoveX, this->y + this->pendingMoveY, cells);
 		}
 
 		else if (this->currAction == Actions::TURNING_WALL_TO_FOOD)
@@ -57,7 +57,7 @@ void Robot::Move(unsigned int direction, const std::vector<std::vector<Cell*>>& 
 		{
 			if (cells[this->x - 1][this->y]->GetObject() == Objects::NONE)
 			{
-				this->MoveTo(this->x - 1, this->y, cells);
+				this->SetPosition(this->x - 1, this->y, cells);
 			}
 		}
 	}
@@ -69,7 +69,7 @@ void Robot::Move(unsigned int direction, const std::vector<std::vector<Cell*>>& 
 		{
 			if (cells[this->x][this->y - 1]->GetObject() == Objects::NONE)
 			{
-				this->MoveTo(this->x, this->y - 1, cells);
+				this->SetPosition(this->x, this->y - 1, cells);
 			}
 		}
 	}
@@ -81,7 +81,7 @@ void Robot::Move(unsigned int direction, const std::vector<std::vector<Cell*>>& 
 		{
 			if (cells[this->x + 1][this->y]->GetObject() == Objects::NONE)
 			{
-				this->MoveTo(this->x + 1, this->y, cells);
+				this->SetPosition(this->x + 1, this->y, cells);
 			}
 		}
 	}
@@ -93,7 +93,7 @@ void Robot::Move(unsigned int direction, const std::vector<std::vector<Cell*>>& 
 		{
 			if (cells[this->x][this->y + 1]->GetObject() == Objects::NONE)
 			{
-				this->MoveTo(this->x, this->y + 1, cells);
+				this->SetPosition(this->x, this->y + 1, cells);
 			}
 		}
 	}
@@ -305,13 +305,13 @@ void Robot::SetRandomPos(std::vector<std::vector<Cell*>>& cells)
 
 		if (cells[a][b]->GetObject() == Objects::NONE)
 		{
-			this->MoveTo(a, b, cells);
+			this->SetPosition(a, b, cells);
 			break;
 		}
 	}
 }
 
-void Robot::MoveTo(unsigned int x, unsigned int y, const std::vector<std::vector<Cell*>>& cells)
+void Robot::SetPosition(unsigned int x, unsigned int y, const std::vector<std::vector<Cell*>>& cells)
 {
 	cells[this->x][this->y]->RemoveObject();
 	this->x = x;
@@ -385,8 +385,11 @@ void Robot::Draw(sf::RenderWindow& window)
 	this->drawRect.setPosition(x, y);
 	window.draw(this->drawRect);
 	
-	// Text on top representing amount of HP
-	this->text.setString(std::to_string(this->lifeTimer));
-	this->text.setPosition(x + 1, y + 1);
-	window.draw(this->text);
+	if (sda::ROBOT_DRAW_TEXT)
+	{
+		// Text on top representing amount of HP
+		this->text.setString(std::to_string(this->lifeTimer));
+		this->text.setPosition(x + 1, y + 1);
+		window.draw(this->text);
+	}
 }

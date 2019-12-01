@@ -41,7 +41,7 @@ private:
 	void TurnWallIntoFood(unsigned int direction, const std::vector<std::vector<Cell*>>& cells);
 	void AddLife(unsigned int amount);
 
-	void MoveTo(unsigned int x, unsigned int y, const std::vector<std::vector<Cell*>>& cells);
+	void SetPosition(unsigned int x, unsigned int y, const std::vector<std::vector<Cell*>>& cells);
 
 public:
 	Robot(unsigned int x, unsigned int y);
