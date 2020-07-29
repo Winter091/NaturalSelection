@@ -1,4 +1,7 @@
 # About
+
+![Screenshot](https://github.com/Winter091/NaturalSelection/blob/master/img/img1.png)
+
 This is the really interesting project that allows you to see how the living cell can evolve.
 
 There's a grid that consist of cells. Each cell can be empty, or be a food, or be a wall.
